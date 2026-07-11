@@ -698,7 +698,7 @@ local Button8 = MainTab:CreateButton({
 
 -- Nút bấm 11: Banana Hub
 local Button8 = MainTab:CreateButton({
-   Name = "Banana Hub  ( TSB )",
+   Name = "Banana Hub  ( Blox fruit )",
    Callback = function()
        Rayfield:Notify({
           Title = "Kích Hoạt Thành Công",
@@ -708,6 +708,22 @@ local Button8 = MainTab:CreateButton({
        })
        pcall(function()
            loadstring(game:HttpGet("https://raw.githubusercontent.com/longhihilonghihi-hub/BananaHub/refs/heads/main/CombackVersion"))()
+       end)
+   end,
+})
+
+-- Nút bấm 12: Target Player
+local Button8 = MainTab:CreateButton({
+   Name = "Target Player  ( TSB )",
+   Callback = function()
+       Rayfield:Notify({
+          Title = "Kích Hoạt Thành Công",
+          Content = "Đang chạy script TSB...",
+          Duration = 5,
+          Image = 4483362458,
+       })
+       pcall(function()
+           loadstring(game:HttpGet("https://pastefy.app/SOqh1dKy/raw"))()
        end)
    end,
 })
