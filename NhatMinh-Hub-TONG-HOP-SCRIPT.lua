@@ -552,7 +552,7 @@ local Button18 = MainTab:CreateButton({
    end,
 })
 
--- Nút bấm 18: Script Blox Fruit PC & Mobile (Có Key)
+-- Nút bấm 19: NhatMinh Hub Evade
 local Button18 = MainTab:CreateButton({
    Name = "NhatMinh Hub Evade",
    Callback = function()
@@ -568,7 +568,21 @@ local Button18 = MainTab:CreateButton({
    end,
 })
 
--- Thông báo khi Hub load xong hẳn
+-- Nút bấm 18: +1 speed keyboard
+local Button18 = MainTab:CreateButton({
+   Name = "+1 speed keyboard ( no key )",
+   Callback = function()
+       Rayfield:Notify({
+          Title = "Kích Hoạt Thành Công",
+          Content = "Đang chạy script ...",
+          Duration = 5,
+          Image = 4483362458,
+       })
+       pcall(function()
+           loadstring(game:HttpGet("https://www.luxyhub.space/api/loader/luxyhub"))()
+       end)
+   end,
+})-- Thông báo khi Hub load xong hẳn
 Rayfield:Notify({
    Title = "NhatMinh hub ",
    Content = "Hub đã sẵn sàng sử dụng!",
