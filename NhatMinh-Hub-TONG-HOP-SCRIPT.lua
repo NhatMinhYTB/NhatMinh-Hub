@@ -664,6 +664,54 @@ local Button8 = MainTab:CreateButton({
    end,
 })
 
+-- Nút bấm 9: script TSB
+local Button8 = MainTab:CreateButton({
+   Name = "Vexon Hub  ( TSB )",
+   Callback = function()
+       Rayfield:Notify({
+          Title = "Kích Hoạt Thành Công",
+          Content = "Đang chạy script TSB...",
+          Duration = 5,
+          Image = 4483362458,
+       })
+       pcall(function()
+           loadstring(game:HttpGet("https://raw.githubusercontent.com/DiosDi/VexonHub/refs/heads/main/VexonHub"))()
+       end)
+   end,
+})
+
+-- Nút bấm 10: TSB
+local Button8 = MainTab:CreateButton({
+   Name = "ThanhDuy Hub  ( TSB )",
+   Callback = function()
+       Rayfield:Notify({
+          Title = "Kích Hoạt Thành Công",
+          Content = "Đang chạy script TSB...",
+          Duration = 5,
+          Image = 4483362458,
+       })
+       pcall(function()
+           loadstring(game:HttpGet("https://raw.githubusercontent.com/DuyYeuEmNhieuLam/Test2/refs/heads/main/Meme.lua"))()
+       end)
+   end,
+})
+
+-- Nút bấm 11: Banana Hub
+local Button8 = MainTab:CreateButton({
+   Name = "Banana Hub  ( TSB )",
+   Callback = function()
+       Rayfield:Notify({
+          Title = "Kích Hoạt Thành Công",
+          Content = "Đang chạy script Banana Hub...",
+          Duration = 5,
+          Image = 4483362458,
+       })
+       pcall(function()
+           loadstring(game:HttpGet("https://raw.githubusercontent.com/longhihilonghihi-hub/BananaHub/refs/heads/main/CombackVersion"))()
+       end)
+   end,
+})
+
 -- Thông báo khi Hub load xong
 Rayfield:Notify({
    Title = "NhatMinh hub ",
