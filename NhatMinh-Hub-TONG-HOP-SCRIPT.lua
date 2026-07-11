@@ -542,12 +542,28 @@ local Button18 = MainTab:CreateButton({
    Callback = function()
        Rayfield:Notify({
           Title = "Kích Hoạt Thành Công",
-          Content = "Đang chạy script Blox Fruit KEY...",
+          Content = "Đang chạy script Blox Fruit ...",
           Duration = 5,
           Image = 4483362458,
        })
        pcall(function()
            loadstring(game:HttpGet("https://raw.githubusercontent.com/alephi1/BloxFruitScript/refs/heads/main/main.lua"))()
+       end)
+   end,
+})
+
+-- Nút bấm 18: Script Blox Fruit PC & Mobile (Có Key)
+local Button18 = MainTab:CreateButton({
+   Name = "NhatMinh Hub Evade",
+   Callback = function()
+       Rayfield:Notify({
+          Title = "Kích Hoạt Thành Công",
+          Content = "Đang chạy script Evade...",
+          Duration = 5,
+          Image = 4483362458,
+       })
+       pcall(function()
+           loadstring(game:HttpGet("https://raw.githubusercontent.com/NhatMinhYTB/NhatMinh-Hub-Evade/main/NhatMinh-Hub-Evade.lua"))()
        end)
    end,
 })
