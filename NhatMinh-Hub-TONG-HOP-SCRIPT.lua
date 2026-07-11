@@ -141,7 +141,6 @@ local Button7 = MainTab:CreateButton({
    end,
 })
 
-
 -- Nút bấm 8: Neji hub (blox fruit)
 local Button8 = MainTab:CreateButton({
    Name = "Neji hub (blox fruit)",
@@ -175,7 +174,7 @@ local Button9 = MainTab:CreateButton({
 })
 
 -- Nút bấm 10: Fly GUI v3
-local Button9 = MainTab:CreateButton({
+local Button10 = MainTab:CreateButton({
    Name = "Fly GUI v3",
    Callback = function()
        Rayfield:Notify({
@@ -191,7 +190,7 @@ local Button9 = MainTab:CreateButton({
 })
 
 -- Nút bấm 11: script invisible
-local Button9 = MainTab:CreateButton({
+local Button11 = MainTab:CreateButton({
    Name = "invisible script",
    Callback = function()
        Rayfield:Notify({
@@ -206,8 +205,8 @@ local Button9 = MainTab:CreateButton({
    end,
 })
 
--- Nút bấm 11: script obby for UGC
-local Button9 = MainTab:CreateButton({
+-- Nút bấm 12: script obby for UGC
+local Button12 = MainTab:CreateButton({
    Name = "obby for UGC",
    Callback = function()
        Rayfield:Notify({
@@ -218,439 +217,248 @@ local Button9 = MainTab:CreateButton({
        })
        pcall(function()
            local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local TeleportService = game:GetService("TeleportService")
-local GuiService = game:GetService("GuiService")
-local player = Players.LocalPlayer
+           local RunService = game:GetService("RunService")
+           local TweenService = game:GetService("TweenService")
+           local UserInputService = game:GetService("UserInputService")
+           local TeleportService = game:GetService("TeleportService")
+           local GuiService = game:GetService("GuiService")
+           local player = Players.LocalPlayer
 
--- ========================================================
--- KIỂM TRA CHỐNG TRÙNG SCRIPT TOÀN CỤC (SỬA LỖI REJOIN TRÙNG)
--- ========================================================
-if _G.ScriptRunning then
-    return
-end
-_G.ScriptRunning = true 
+           if _G.ScriptRunning then return end
+           _G.ScriptRunning = true 
 
--- Tự xóa UI cũ nếu còn sót lại từ server trước
-local oldGui = player:WaitForChild("PlayerGui"):FindFirstChild("AutoObby_GodAlways")
-if oldGui then oldGui:Destroy() end
-local oldLoading = player:WaitForChild("PlayerGui"):FindFirstChild("Loading_ChienDo")
-if oldLoading then oldLoading:Destroy() end
+           local oldGui = player:WaitForChild("PlayerGui"):FindFirstChild("AutoObby_GodAlways")
+           if oldGui then oldGui:Destroy() end
+           local oldLoading = player:WaitForChild("PlayerGui"):FindFirstChild("Loading_ChienDo")
+           if oldLoading then oldLoading:Destroy() end
 
--- ==========================================
--- ĐOẠN XỬ LÝ AUTO REJOIN CHUẨN (ĐÃ ĐỔI LINK MỚI)
--- ==========================================
-local isRejoining = false
+           local isRejoining = false
+           local function autoRejoin()
+               if isRejoining then return end
+               isRejoining = true
+               _G.ScriptRunning = nil
+               if queue_on_teleport then
+                   queue_on_teleport([[_G.IsAutoRejoin = true repeat task.wait() until game:IsLoaded() local p = game:GetService("Players").LocalPlayer repeat task.wait() until p and p:FindFirstChild("PlayerGui")]])
+               end
+               task.wait(0.5)
+               if #Players:GetPlayers() <= 1 then
+                   TeleportService:Teleport(game.PlaceId, player)
+               else
+                   TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
+               end
+           end
 
-local function autoRejoin()
-    if isRejoining then return end
-    isRejoining = true
-    
-    _G.ScriptRunning = nil
-    
-    if queue_on_teleport then
-        queue_on_teleport([[
-            _G.IsAutoRejoin = true
-            repeat task.wait() until game:IsLoaded()
-            local p = game:GetService("Players").LocalPlayer
-            repeat task.wait() until p and p:FindFirstChild("PlayerGui")
-            
-            
-        ]])
-    end
-    
-    task.wait(0.5)
-    if #Players:GetPlayers() <= 1 then
-        TeleportService:Teleport(game.PlaceId, player)
-    else
-        TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
-    end
-end
+           GuiService.ErrorMessageChanged:Connect(autoRejoin)
+           game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
+               if child.Name == "ErrorPrompt" then autoRejoin() end
+           end)
 
-GuiService.ErrorMessageChanged:Connect(function()
-    autoRejoin()
-end)
+           local DEFAULT_SETTINGS = {
+               FLY_UP_HEIGHT = 10,
+               FLY_SPEED = 200, 
+               WAIT_TIME = 0.28,
+               CHECKPOINT_FOLDER = workspace:WaitForChild("Checkpoints", 15)
+           }
+           local currentFlySpeed = DEFAULT_SETTINGS.FLY_SPEED
+           local scanMultiplier = 1 
+           local running = false
+           local isMinimized = false
+           local protectionConnection = nil
 
-game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
-    if child.Name == "ErrorPrompt" then
-        autoRejoin()
-    end
-end)
--- ==========================================
+           local function createLoadingScreen()
+               if not player:FindFirstChild("PlayerGui") then repeat task.wait() until player:FindFirstChild("PlayerGui") end
+               local loadingGui = Instance.new("ScreenGui", player.PlayerGui)
+               loadingGui.Name = "Loading_ChienDo"; loadingGui.DisplayOrder = 999
+               local bg = Instance.new("Frame", loadingGui)
+               bg.Size = UDim2.new(1, 0, 1, 0); bg.BackgroundColor3 = Color3.new(0, 0, 0); bg.BackgroundTransparency = 0.2; bg.BorderSizePixel = 0
+               local centerContainer = Instance.new("Frame", bg)
+               centerContainer.Size = UDim2.new(0, 600, 0, 100); centerContainer.Position = UDim2.new(0.5, -300, 0.5, -50); centerContainer.BackgroundTransparency = 1
+               local textContainer = Instance.new("Frame", centerContainer)
+               textContainer.Size = UDim2.new(1, 0, 0, 60); textContainer.Position = UDim2.new(0, 0, 0, 0); textContainer.BackgroundTransparency = 1
+               local layout = Instance.new("UIListLayout", textContainer)
+               layout.FillDirection = Enum.FillDirection.Horizontal; layout.HorizontalAlignment = Enum.HorizontalAlignment.Center; layout.VerticalAlignment = Enum.VerticalAlignment.Center; layout.SortOrder = Enum.SortOrder.LayoutOrder
+               local subVersionLabel = Instance.new("TextLabel", centerContainer)
+               subVersionLabel.Size = UDim2.new(1, 0, 0, 30); subVersionLabel.Position = UDim2.new(0, 0, 0, 65); subVersionLabel.BackgroundTransparency = 1; subVersionLabel.Text = "(version 2.209 By RobTop)"; subVersionLabel.TextColor3 = Color3.fromRGB(180, 180, 180); subVersionLabel.Font = Enum.Font.Gotham; subVersionLabel.TextSize = 16; subVersionLabel.TextTransparency = 1 
 
-local DEFAULT_SETTINGS = {
-    FLY_UP_HEIGHT = 10,
-    FLY_SPEED = 200, 
-    WAIT_TIME = 0.28,
-    CHECKPOINT_FOLDER = workspace:WaitForChild("Checkpoints", 15)
-}
+               task.spawn(function()
+                   for i = 1, 120 do
+                       task.spawn(function()
+                           local dot = Instance.new("Frame", bg); dot.Size = UDim2.new(0, 5, 0, 5); dot.BackgroundColor3 = Color3.new(1, 0, 0); dot.BorderSizePixel = 0; dot.Position = UDim2.new(math.random(), 0, math.random(), 0); Instance.new("UICorner", dot)
+                           TweenService:Create(dot, TweenInfo.new(3, Enum.EasingStyle.Linear), {Position = UDim2.new(math.random(), 0, math.random(), 0), BackgroundTransparency = 1}):Play()
+                       end)
+                   end
+               end)
 
-local currentFlySpeed = DEFAULT_SETTINGS.FLY_SPEED
-local scanMultiplier = 1 
+               local textStr = "MADE BY Cầm Vũ Nhật Minh"
+               local labels = {}
+               local order = 1
+               for _, c in utf8.codes(textStr) do
+                   local char = utf8.char(c)
+                   local charLabel = Instance.new("TextLabel", textContainer)
+                   charLabel.Size = UDim2.new(0, char == " " and 15 or 30, 1, 0); charLabel.BackgroundTransparency = 1; charLabel.Text = char; charLabel.TextColor3 = Color3.new(1, 0, 0); charLabel.Font = Enum.Font.GothamBold; charLabel.TextSize = 45; charLabel.LayoutOrder = order; charLabel.TextTransparency = 1; charLabel.Position = UDim2.new(0, 0, 0, 60) 
+                   table.insert(labels, charLabel); order = order + 1
+               end
 
-local running = false
-local isMinimized = false
-local protectionConnection = nil
+               task.spawn(function()
+                   for _, label in ipairs(labels) do
+                       TweenService:Create(label, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0), TextTransparency = 0}):Play()
+                       task.wait(0.1) 
+                   end
+                   TweenService:Create(subVersionLabel, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+               end)
+               task.wait(3)
+               loadingGui:Destroy()
+           end
 
--- ==========================================
--- MENU LOADING CHỮ MÀU ĐỎ + SUBTITLE ROBTOP
--- ==========================================
-local function createLoadingScreen()
-    if not player:FindFirstChild("PlayerGui") then
-        repeat task.wait() until player:FindFirstChild("PlayerGui")
-    end
+           local function makeDraggable(gui)
+               local dragging, dragInput, dragStart, startPos
+               gui.InputBegan:Connect(function(input)
+                   if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true; dragStart = input.Position; startPos = gui.Position end
+               end)
+               gui.InputChanged:Connect(function(input)
+                   if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+               end)
+               UserInputService.InputChanged:Connect(function(input)
+                   if input == dragInput and dragging then
+                       local delta = input.Position - dragStart
+                       gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                   end
+               end)
+               UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end end)
+           end
 
-    local loadingGui = Instance.new("ScreenGui", player.PlayerGui)
-    loadingGui.Name = "Loading_ChienDo"; loadingGui.DisplayOrder = 999
-    
-    local bg = Instance.new("Frame", loadingGui)
-    bg.Size = UDim2.new(1, 0, 1, 0)
-    bg.BackgroundColor3 = Color3.new(0, 0, 0)
-    bg.BackgroundTransparency = 0.2
-    bg.BorderSizePixel = 0
-    
-    local centerContainer = Instance.new("Frame", bg)
-    centerContainer.Size = UDim2.new(0, 600, 0, 100)
-    centerContainer.Position = UDim2.new(0.5, -300, 0.5, -50)
-    centerContainer.BackgroundTransparency = 1
-    
-    local textContainer = Instance.new("Frame", centerContainer)
-    textContainer.Size = UDim2.new(1, 0, 0, 60)
-    textContainer.Position = UDim2.new(0, 0, 0, 0)
-    textContainer.BackgroundTransparency = 1
-    textContainer.ClipsDescendants = false 
-    
-    local layout = Instance.new("UIListLayout", textContainer)
-    layout.FillDirection = Enum.FillDirection.Horizontal
-    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    layout.VerticalAlignment = Enum.VerticalAlignment.Center
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
+           createLoadingScreen()
 
-    local subVersionLabel = Instance.new("TextLabel", centerContainer)
-    subVersionLabel.Size = UDim2.new(1, 0, 0, 30)
-    subVersionLabel.Position = UDim2.new(0, 0, 0, 65) 
-    subVersionLabel.BackgroundTransparency = 1
-    subVersionLabel.Text = "(version 2.209 By RobTop)"
-    subVersionLabel.TextColor3 = Color3.fromRGB(180, 180, 180) 
-    subVersionLabel.Font = Enum.Font.Gotham
-    subVersionLabel.TextSize = 16
-    subVersionLabel.TextTransparency = 1 
+           local mainGui = Instance.new("ScreenGui", player.PlayerGui)
+           mainGui.Name = "AutoObby_GodAlways"; mainGui.ResetOnSpawn = false
+           local frame = Instance.new("Frame", mainGui)
+           frame.Size = UDim2.new(0, 220, 0, 180); frame.Position = UDim2.new(0, 30, 0.5, -90); frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15); frame.BorderSizePixel = 0; frame.ClipsDescendants = true; frame.Active = true
+           Instance.new("UICorner", frame); makeDraggable(frame)
 
-    task.spawn(function()
-        for i = 1, 120 do
-            task.spawn(function()
-                local dot = Instance.new("Frame", bg); dot.Size = UDim2.new(0, 5, 0, 5); dot.BackgroundColor3 = Color3.new(1, 0, 0); dot.BorderSizePixel = 0; dot.Position = UDim2.new(math.random(), 0, math.random(), 0); Instance.new("UICorner", dot)
-                TweenService:Create(dot, TweenInfo.new(3, Enum.EasingStyle.Linear), {Position = UDim2.new(math.random(), 0, math.random(), 0), BackgroundTransparency = 1}):Play()
-            end)
-        end
-    end)
+           task.spawn(function()
+               while mainGui.Parent do
+                   local dot = Instance.new("Frame", frame); dot.Size = UDim2.new(0, 3, 0, 3); dot.BackgroundColor3 = Color3.new(1, 0, 0); dot.Position = UDim2.new(math.random(), 0, math.random(), 0); dot.ZIndex = 1; dot.BorderSizePixel = 0; Instance.new("UICorner", dot)
+                   TweenService:Create(dot, TweenInfo.new(2, Enum.EasingStyle.Linear), {Position = UDim2.new(math.random(), 0, math.random(), 0), BackgroundTransparency = 1}):Play()
+                   game:GetService("Debris"):AddItem(dot, 2); task.wait(0.1)
+               end
+           end)
 
-    local textStr = "MADE BY Cầm Vũ Nhật Minh"
-    local labels = {}
-    local order = 1
+           local topContent = Instance.new("Frame", frame); topContent.Size = UDim2.new(1, 0, 0, 70); topContent.BackgroundTransparency = 1; topContent.ZIndex = 5
+           local title = Instance.new("TextLabel", topContent); title.Size = UDim2.new(1, 0, 0, 30); title.Position = UDim2.new(0, 0, 0, 15); title.Text = "obby for ugc"; title.TextColor3 = Color3.new(1, 1, 1); title.Font = Enum.Font.GothamBold; title.TextSize = 18; title.BackgroundTransparency = 1; title.ZIndex = 6
+           local subTitle = Instance.new("TextLabel", topContent); subTitle.Size = UDim2.new(1, 0, 0, 20); subTitle.Position = UDim2.new(0, 0, 0, 40); subTitle.Text = "(AFK OR PLAY)"; subTitle.TextColor3 = Color3.fromRGB(200, 200, 200); subTitle.Font = Enum.Font.Gotham; subTitle.TextSize = 14; subTitle.BackgroundTransparency = 1; subTitle.ZIndex = 6
 
-    for _, c in utf8.codes(textStr) do
-        local char = utf8.char(c)
-        local charLabel = Instance.new("TextLabel", textContainer)
-        
-        charLabel.Size = UDim2.new(0, char == " " and 15 or 30, 1, 0)
-        charLabel.BackgroundTransparency = 1
-        charLabel.Text = char
-        charLabel.TextColor3 = Color3.new(1, 0, 0) 
-        charLabel.Font = Enum.Font.GothamBold
-        charLabel.TextSize = 45
-        charLabel.LayoutOrder = order
-        
-        charLabel.TextTransparency = 1
-        charLabel.Position = UDim2.new(0, 0, 0, 60) 
-        
-        table.insert(labels, charLabel)
-        order = order + 1
-    end
+           local infoBtn = Instance.new("TextButton", frame)
+           infoBtn.Size = UDim2.new(0, 25, 0, 25); infoBtn.Position = UDim2.new(0, 5, 0, 5); infoBtn.Text = "!"; infoBtn.TextColor3 = Color3.new(1, 0, 0); infoBtn.BackgroundTransparency = 1; infoBtn.Font = Enum.Font.GothamBold; infoBtn.TextSize = 20; infoBtn.ZIndex = 10
 
-    task.spawn(function()
-        for index, label in ipairs(labels) do
-            TweenService:Create(label, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                Position = UDim2.new(0, 0, 0, 0),
-                TextTransparency = 0
-            }):Play()
-            
-            task.wait(0.1) 
-        end
-        TweenService:Create(subVersionLabel, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            TextTransparency = 0
-        }):Play()
-    end)
+           local bugReportFrame = Instance.new("TextButton", mainGui)
+           bugReportFrame.Size = UDim2.new(0, 320, 0, 180); bugReportFrame.Position = UDim2.new(0.5, -160, 0.5, -90); bugReportFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10); bugReportFrame.BackgroundTransparency = 0.25; bugReportFrame.Visible = false; bugReportFrame.ZIndex = 100
+           Instance.new("UICorner", bugReportFrame).CornerRadius = UDim.new(0, 8)
+           local stroke = Instance.new("UIStroke", bugReportFrame); stroke.Color = Color3.new(1, 0, 0); stroke.Thickness = 2; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+           local bugTextLabel = Instance.new("TextLabel", bugReportFrame)
+           bugTextLabel.Size = UDim2.new(1, -20, 1, -20); bugTextLabel.Position = UDim2.new(0, 10, 0, 10); bugTextLabel.BackgroundTransparency = 1; bugTextLabel.Text = "-INFO BOARD-\n-Update 1.101😎\n+fixed bug at stage 243\n-Next Update 1.2👍\n+add automatic rebirth\n+control panel (speed, altitude, etc.)"; bugTextLabel.TextColor3 = Color3.new(1, 1, 1); bugTextLabel.Font = Enum.Font.GothamMedium; bugTextLabel.TextSize = 14; bugTextLabel.TextWrapped = true; bugTextLabel.TextXAlignment = Enum.TextXAlignment.Left; bugTextLabel.TextYAlignment = Enum.TextYAlignment.Top; bugTextLabel.ZIndex = 101
 
-    task.wait(3)
-    loadingGui:Destroy()
-end
--- ==========================================
+           infoBtn.MouseButton1Click:Connect(function() bugReportFrame.Visible = not bugReportFrame.Visible end)
+           bugReportFrame.MouseButton1Click:Connect(function() bugReportFrame.Visible = false end)
 
-local function makeDraggable(gui)
-    local dragging, dragInput, dragStart, startPos
-    gui.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true; dragStart = input.Position; startPos = gui.Position
-        end
-    end)
-    gui.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end end)
-end
+           local bottomContent = Instance.new("Frame", frame); bottomContent.Size = UDim2.new(1, 0, 0, 110); bottomContent.Position = UDim2.new(0, 0, 0, 70); bottomContent.BackgroundTransparency = 1; bottomContent.ZIndex = 5
+           local btn = Instance.new("TextButton", bottomContent); btn.Size = UDim2.new(0, 180, 0, 50); btn.Position = UDim2.new(0.5, -90, 0, 20); btn.Text = "Auto Farm Stage: OFF"; btn.BackgroundColor3 = Color3.new(1, 1, 1); btn.TextColor3 = Color3.new(0, 0, 0); btn.Font = Enum.Font.GothamBold; btn.TextSize = 15; btn.ZIndex = 6; btn.Active = true
+           Instance.new("UICorner", btn)
 
-createLoadingScreen()
+           local toggleBtn = Instance.new("TextButton", frame); toggleBtn.Size = UDim2.new(0, 25, 0, 25); toggleBtn.Position = UDim2.new(1, -30, 0, 5); toggleBtn.Text = "▲"; toggleBtn.TextColor3 = Color3.new(1, 1, 1); toggleBtn.BackgroundTransparency = 1; toggleBtn.Font = Enum.Font.GothamBold; toggleBtn.TextSize = 18; toggleBtn.ZIndex = 10
+           toggleBtn.MouseButton1Click:Connect(function()
+               isMinimized = not isMinimized
+               if isMinimized then frame:TweenSize(UDim2.new(0, 220, 0, 70), "Out", "Quart", 0.3, true); toggleBtn.Text = "▼"; bottomContent.Visible = false
+               else frame:TweenSize(UDim2.new(0, 220, 0, 180), "Out", "Quart", 0.3, true); toggleBtn.Text = "▲"; bottomContent.Visible = true end
+           end)
 
-local mainGui = Instance.new("ScreenGui", player.PlayerGui)
-mainGui.Name = "AutoObby_GodAlways"; mainGui.ResetOnSpawn = false
+           local function toggleProtection(state)
+               if state then
+                   if not protectionConnection then
+                       protectionConnection = RunService.Stepped:Connect(function()
+                           if player.Character then
+                               local h = player.Character:FindFirstChildOfClass("Humanoid")
+                               if h then h.MaxHealth = math.huge; h.Health = math.huge; h:SetStateEnabled(Enum.HumanoidStateType.Dead, false) end
+                               for _, p in pairs(player.Character:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide = false end end
+                           end
+                       end)
+                   end
+               else if protectionConnection then protectionConnection:Disconnect(); protectionConnection = nil end end
+           end
 
-local frame = Instance.new("Frame", mainGui)
-frame.Size = UDim2.new(0, 220, 0, 180); frame.Position = UDim2.new(0, 30, 0.5, -90); frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15); frame.BorderSizePixel = 0; frame.ClipsDescendants = true; frame.Active = true
-Instance.new("UICorner", frame); makeDraggable(frame)
+           local function flyToTarget(target)
+               local char = player.Character; local hrp = char and char:FindFirstChild("HumanoidRootPart")
+               if not hrp or not target then return end
+               local touched = false
+               local conn; conn = target.Touched:Connect(function(hit) if hit:IsDescendantOf(char) then touched = true; if conn then conn:Disconnect(); conn = nil end end end)
+               local targetPos = target.Position 
+               local upY = hrp.Position.Y + DEFAULT_SETTINGS.FLY_UP_HEIGHT
+               while running and not touched and hrp.Position.Y < upY - 1 do hrp.Velocity = Vector3.new(0, 50, 0); task.wait() end
+               while running and not touched and (Vector2.new(hrp.Position.X, hrp.Position.Z) - Vector2.new(targetPos.X, targetPos.Z)).Magnitude > 4 do
+                   hrp.Velocity = (Vector3.new(targetPos.X, hrp.Position.Y, targetPos.Z) - hrp.Position).Unit * currentFlySpeed
+                   task.wait()
+               end
+               local t = tick()
+               while running and not touched do
+                   hrp.Velocity = (targetPos - hrp.Position).Unit * (currentFlySpeed * 0.4)
+                   task.wait()
+                   if tick() - t > 6 then hrp.CFrame = CFrame.new(targetPos); touched = true end
+               end
+               hrp.Velocity = Vector3.new(0, 0.2, 0)
+               if conn then conn:Disconnect(); conn = nil end 
 
-task.spawn(function()
-    while mainGui.Parent do
-        local dot = Instance.new("Frame", frame); dot.Size = UDim2.new(0, 3, 0, 3); dot.BackgroundColor3 = Color3.new(1, 0, 0); dot.Position = UDim2.new(math.random(), 0, math.random(), 0); dot.ZIndex = 1; dot.BorderSizePixel = 0; Instance.new("UICorner", dot)
-        TweenService:Create(dot, TweenInfo.new(2, Enum.EasingStyle.Linear), {Position = UDim2.new(math.random(), 0, math.random(), 0), BackgroundTransparency = 1}):Play()
-        game:GetService("Debris"):AddItem(dot, 2); task.wait(0.1)
-    end
-end)
+               if target.Name == "243" and running then
+                   hrp.Velocity = Vector3.new(0, 0, 0); task.wait(0.28)
+                   if running and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                       local currentHrp = player.Character.HumanoidRootPart
+                       local blueDirectionPos = Vector3.new(currentHrp.Position.X, currentHrp.Position.Y, currentHrp.Position.Z + 200)
+                       while running and (Vector2.new(currentHrp.Position.X, currentHrp.Position.Z) - Vector2.new(blueDirectionPos.X, blueDirectionPos.Z)).Magnitude > 5 do
+                           currentHrp.Velocity = Vector3.new(0, 0.2, currentFlySpeed); task.wait()
+                       end
+                       currentHrp.Velocity = Vector3.new(0, 0.2, 0)
+                   end
+                   return
+               end
+               currentFlySpeed = DEFAULT_SETTINGS.FLY_SPEED; scanMultiplier = 1; task.wait(DEFAULT_SETTINGS.WAIT_TIME) 
+           end
 
-local topContent = Instance.new("Frame", frame); topContent.Size = UDim2.new(1, 0, 0, 70); topContent.BackgroundTransparency = 1; topContent.ZIndex = 5
-local title = Instance.new("TextLabel", topContent); title.Size = UDim2.new(1, 0, 0, 30); title.Position = UDim2.new(0, 0, 0, 15); title.Text = "obby for ugc"; title.TextColor3 = Color3.new(1, 1, 1); title.Font = Enum.Font.GothamBold; title.TextSize = 18; title.BackgroundTransparency = 1; title.ZIndex = 6
-local subTitle = Instance.new("TextLabel", topContent); subTitle.Size = UDim2.new(1, 0, 0, 20); subTitle.Position = UDim2.new(0, 0, 0, 40); subTitle.Text = "(AFK OR PLAY)"; subTitle.TextColor3 = Color3.fromRGB(200, 200, 200); subTitle.Font = Enum.Font.Gotham; subTitle.TextSize = 14; subTitle.BackgroundTransparency = 1; subTitle.ZIndex = 6
+           local function startFarming()
+               running = true; toggleProtection(true)
+               btn.Text = "Auto Farm Stage: ON"; btn.BackgroundColor3 = Color3.new(1, 0, 0); btn.TextColor3 = Color3.new(1, 1, 1)
+               task.spawn(function()
+                   local lastFoundTime = tick()
+                   while running do
+                       local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                       if not hrp then task.wait(1) continue end
+                       local closestStageNum = -1; local minDist = math.huge
+                       for _, cp in pairs(DEFAULT_SETTINGS.CHECKPOINT_FOLDER:GetChildren()) do
+                           local stageNum = tonumber(cp.Name)
+                           if stageNum and cp:IsA("BasePart") then
+                               local d = (hrp.Position - cp.Position).Magnitude
+                               if d < minDist then minDist = d; closestStageNum = stageNum end
+                           end
+                       end
+                       local nextTarget = DEFAULT_SETTINGS.CHECKPOINT_FOLDER:FindFirstChild(tostring(closestStageNum + 1))
+                       if nextTarget then lastFoundTime = tick(); flyToTarget(nextTarget)
+                       else
+                           if tick() - lastFoundTime > 5 then scanMultiplier = 2; currentFlySpeed = DEFAULT_SETTINGS.FLY_SPEED * 1.5; lastFoundTime = tick() end
+                           task.wait(0.5)
+                       end
+                   end
+               end)
+           end
 
--- Nút thông báo dấu chấm than "!"
-local infoBtn = Instance.new("TextButton", frame)
-infoBtn.Size = UDim2.new(0, 25, 0, 25)
-infoBtn.Position = UDim2.new(0, 5, 0, 5)
-infoBtn.Text = "!"
-infoBtn.TextColor3 = Color3.new(1, 0, 0)
-infoBtn.BackgroundTransparency = 1
-infoBtn.Font = Enum.Font.GothamBold
-infoBtn.TextSize = 20
-infoBtn.ZIndex = 10
+           local function stopFarming() running = false; toggleProtection(false); btn.Text = "Auto Farm Stage: OFF"; btn.BackgroundColor3 = Color3.new(1, 1, 1); btn.TextColor3 = Color3.new(0, 0, 0) end
+           btn.MouseButton1Click:Connect(function() if running then stopFarming() else startFarming() end end)
+           player.CharacterAdded:Connect(function() running = false; toggleProtection(false); currentFlySpeed = DEFAULT_SETTINGS.FLY_SPEED; scanMultiplier = 1; btn.Text = "Auto Farm Stage: OFF"; btn.BackgroundColor3 = Color3.new(1, 1, 1) end)
 
--- Bảng thông báo (INFO BOARD)
-local bugReportFrame = Instance.new("TextButton", mainGui)
-bugReportFrame.Size = UDim2.new(0, 320, 0, 180)
-bugReportFrame.Position = UDim2.new(0.5, -160, 0.5, -90)
-bugReportFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-bugReportFrame.BackgroundTransparency = 0.25
-bugReportFrame.Visible = false
-bugReportFrame.ZIndex = 100
-Instance.new("UICorner", bugReportFrame).CornerRadius = UDim.new(0, 8)
-
-local stroke = Instance.new("UIStroke", bugReportFrame)
-stroke.Color = Color3.new(1, 0, 0)
-stroke.Thickness = 2
-stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-
-local bugTextLabel = Instance.new("TextLabel", bugReportFrame)
-bugTextLabel.Size = UDim2.new(1, -20, 1, -20)
-bugTextLabel.Position = UDim2.new(0, 10, 0, 10)
-bugTextLabel.BackgroundTransparency = 1
-bugTextLabel.Text = "-INFO BOARD-\n-Update 1.101😎\n+fixed bug at stage 243\n-Next Update 1.2👍\n+add automatic rebirth\n+control panel (speed, altitude, etc.)"
-bugTextLabel.TextColor3 = Color3.new(1, 1, 1)
-bugTextLabel.Font = Enum.Font.GothamMedium
-bugTextLabel.TextSize = 14
-bugTextLabel.TextWrapped = true
-bugTextLabel.TextXAlignment = Enum.TextXAlignment.Left
-bugTextLabel.TextYAlignment = Enum.TextYAlignment.Top
-bugTextLabel.ZIndex = 101
-
-infoBtn.MouseButton1Click:Connect(function()
-    bugReportFrame.Visible = not bugReportFrame.Visible
-end)
-
-bugReportFrame.MouseButton1Click:Connect(function()
-    bugReportFrame.Visible = false
-end)
-
-local bottomContent = Instance.new("Frame", frame); bottomContent.Size = UDim2.new(1, 0, 0, 110); bottomContent.Position = UDim2.new(0, 0, 0, 70); bottomContent.BackgroundTransparency = 1; bottomContent.ZIndex = 5
-local btn = Instance.new("TextButton", bottomContent); btn.Size = UDim2.new(0, 180, 0, 50); btn.Position = UDim2.new(0.5, -90, 0, 20); btn.Text = "Auto Farm Stage: OFF"; btn.BackgroundColor3 = Color3.new(1, 1, 1); btn.TextColor3 = Color3.new(0, 0, 0); btn.Font = Enum.Font.GothamBold; btn.TextSize = 15; btn.ZIndex = 6; btn.Active = true
-Instance.new("UICorner", btn)
-
-local toggleBtn = Instance.new("TextButton", frame); toggleBtn.Size = UDim2.new(0, 25, 0, 25); toggleBtn.Position = UDim2.new(1, -30, 0, 5); toggleBtn.Text = "▲"; toggleBtn.TextColor3 = Color3.new(1, 1, 1); toggleBtn.BackgroundTransparency = 1; toggleBtn.Font = Enum.Font.GothamBold; toggleBtn.TextSize = 18; toggleBtn.ZIndex = 10
-
-toggleBtn.MouseButton1Click:Connect(function()
-    isMinimized = not isMinimized
-    if isMinimized then
-        frame:TweenSize(UDim2.new(0, 220, 0, 70), "Out", "Quart", 0.3, true); toggleBtn.Text = "▼"; bottomContent.Visible = false
-    else
-        frame:TweenSize(UDim2.new(0, 220, 0, 180), "Out", "Quart", 0.3, true); toggleBtn.Text = "▲"; bottomContent.Visible = true
-    end
-end)
-
-local function toggleProtection(state)
-    if state then
-        if not protectionConnection then
-            protectionConnection = RunService.Stepped:Connect(function()
-                if player.Character then
-                    local h = player.Character:FindFirstChildOfClass("Humanoid")
-                    if h then h.MaxHealth = math.huge; h.Health = math.huge; h:SetStateEnabled(Enum.HumanoidStateType.Dead, false) end
-                    for _, p in pairs(player.Character:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide = false end end
-                end
-            end)
-        end
-    else
-        if protectionConnection then protectionConnection:Disconnect(); protectionConnection = nil end
-    end
-end
-
-local function flyToTarget(target)
-    local char = player.Character; local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    if not hrp or not target then return end
-    
-    local touched = false
-    local conn; conn = target.Touched:Connect(function(hit) 
-        if hit:IsDescendantOf(char) then 
-            touched = true 
-            if conn then conn:Disconnect(); conn = nil end 
-        end 
-    end)
-    
-    local targetPos = target.Position 
-
-    local upY = hrp.Position.Y + DEFAULT_SETTINGS.FLY_UP_HEIGHT
-    while running and not touched and hrp.Position.Y < upY - 1 do 
-        hrp.Velocity = Vector3.new(0, 50, 0); task.wait() 
-    end
-    
-    while running and not touched and (Vector2.new(hrp.Position.X, hrp.Position.Z) - Vector2.new(targetPos.X, targetPos.Z)).Magnitude > 4 do
-        hrp.Velocity = (Vector3.new(targetPos.X, hrp.Position.Y, targetPos.Z) - hrp.Position).Unit * currentFlySpeed
-        task.wait()
-    end
-    
-    local t = tick()
-    while running and not touched do
-        hrp.Velocity = (targetPos - hrp.Position).Unit * (currentFlySpeed * 0.4)
-        task.wait()
-        if tick() - t > 6 then 
-            hrp.CFrame = CFrame.new(targetPos); 
-            touched = true 
-        end
-    end
-
-    hrp.Velocity = Vector3.new(0, 0.2, 0)
-    if conn then conn:Disconnect(); conn = nil end 
-    
-    -- ========================================================
-    -- ĐOẠN XỬ LÝ ĐẶC BIỆT KHI ĐỨNG Ở STAGE 243 (DÙNG VELOCITY ĐỂ BAY)
-    -- ========================================================
-    if target.Name == "243" and running then
-        -- 1. Chờ đúng 0.28s khi người chơi đang đứng ở stage 243
-        hrp.Velocity = Vector3.new(0, 0, 0)
-        task.wait(0.28)
-        
-        if running and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local currentHrp = player.Character.HumanoidRootPart
-            local startPos = currentHrp.Position
-            
-            -- Xác định vị trí đích cách 200 studs theo hướng xanh dương (NAM +Z)
-            local blueDirectionPos = Vector3.new(startPos.X, startPos.Y, startPos.Z + 200)
-            
-            -- 2. Dùng lực đẩy Velocity để nhân vật tự bay thẳng theo hướng xanh dương
-            while running and (Vector2.new(currentHrp.Position.X, currentHrp.Position.Z) - Vector2.new(blueDirectionPos.X, blueDirectionPos.Z)).Magnitude > 5 do
-                currentHrp.Velocity = Vector3.new(0, 0.2, currentFlySpeed)
-                task.wait()
-            end
-            
-            -- 3. Bay đủ 200 studs thì dừng hẳn lại
-            currentHrp.Velocity = Vector3.new(0, 0.2, 0)
-        end
-        return -- Kết thúc xử lý riêng cho Stage 243, bỏ qua đoạn delay mặc định ở dưới
-    end
-    -- ========================================================
-    
-    currentFlySpeed = DEFAULT_SETTINGS.FLY_SPEED
-    scanMultiplier = 1
-    
-    task.wait(DEFAULT_SETTINGS.WAIT_TIME) 
-end
-
-local function startFarming()
-    running = true; toggleProtection(true)
-    btn.Text = "Auto Farm Stage: ON"; btn.BackgroundColor3 = Color3.new(1, 0, 0); btn.TextColor3 = Color3.new(1, 1, 1)
-    
-    task.spawn(function()
-        local lastFoundTime = tick()
-        while running do
-            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-            if not hrp then task.wait(1) continue end
-            
-            local closestStageNum = -1
-            local minDist = math.huge
-            
-            for _, cp in pairs(DEFAULT_SETTINGS.CHECKPOINT_FOLDER:GetChildren()) do
-                local stageNum = tonumber(cp.Name)
-                if stageNum and cp:IsA("BasePart") then
-                    local d = (hrp.Position - cp.Position).Magnitude
-                    if d < minDist then
-                        minDist = d
-                        closestStageNum = stageNum
-                    end
-                end
-            end
-            
-            local nextTarget = DEFAULT_SETTINGS.CHECKPOINT_FOLDER:FindFirstChild(tostring(closestStageNum + 1))
-            
-            if nextTarget then
-                lastFoundTime = tick()
-                flyToTarget(nextTarget)
-            else
-                if tick() - lastFoundTime > 5 then
-                    scanMultiplier = 2
-                    currentFlySpeed = DEFAULT_SETTINGS.FLY_SPEED * 1.5
-                    lastFoundTime = tick()
-                end
-                task.wait(0.5)
-            end
-        end
-    end)
-end
-
-local function stopFarming()
-    running = false; toggleProtection(false)
-    btn.Text = "Auto Farm Stage: OFF"; btn.BackgroundColor3 = Color3.new(1, 1, 1); btn.TextColor3 = Color3.new(0, 0, 0)
-end
-
-btn.MouseButton1Click:Connect(function()
-    if running then stopFarming() else startFarming() end
-end)
-
-player.CharacterAdded:Connect(function() 
-    running = false; toggleProtection(false)
-    currentFlySpeed = DEFAULT_SETTINGS.FLY_SPEED
-    scanMultiplier = 1
-    btn.Text = "Auto Farm Stage: OFF"; btn.BackgroundColor3 = Color3.new(1, 1, 1) 
-end)
-
-if _G.IsAutoRejoin then
-    _G.IsAutoRejoin = nil
-    task.spawn(function()
-        task.wait(3.5)
-        if not running then
-            startFarming()
-        end
-    end)
-end
+           if _G.IsAutoRejoin then _G.IsAutoRejoin = nil task.spawn(function() task.wait(3.5) if not running then startFarming() end end) end
        end)
    end,
 })
 
--- Nút bấm 8: Blox Fruit PC
-local Button8 = MainTab:CreateButton({
-   Name = "Script Blox Fruit PC & Molbie",
+-- Nút bấm 13: Blox Fruit PC
+local Button13 = MainTab:CreateButton({
+   Name = "Script Blox Fruit PC & Mobile",
    Callback = function()
        Rayfield:Notify({
           Title = "Kích Hoạt Thành Công",
@@ -664,8 +472,8 @@ local Button8 = MainTab:CreateButton({
    end,
 })
 
--- Nút bấm 9: script TSB
-local Button8 = MainTab:CreateButton({
+-- Nút bấm 14: script TSB
+local Button14 = MainTab:CreateButton({
    Name = "Vexon Hub  ( TSB )",
    Callback = function()
        Rayfield:Notify({
@@ -680,8 +488,8 @@ local Button8 = MainTab:CreateButton({
    end,
 })
 
--- Nút bấm 10: TSB
-local Button8 = MainTab:CreateButton({
+-- Nút bấm 15: TSB
+local Button15 = MainTab:CreateButton({
    Name = "ThanhDuy Hub  ( TSB )",
    Callback = function()
        Rayfield:Notify({
@@ -696,8 +504,8 @@ local Button8 = MainTab:CreateButton({
    end,
 })
 
--- Nút bấm 11: Banana Hub
-local Button8 = MainTab:CreateButton({
+-- Nút bấm 16: Banana Hub
+local Button16 = MainTab:CreateButton({
    Name = "Banana Hub  ( Blox fruit )",
    Callback = function()
        Rayfield:Notify({
@@ -712,8 +520,8 @@ local Button8 = MainTab:CreateButton({
    end,
 })
 
--- Nút bấm 12: Target Player
-local Button8 = MainTab:CreateButton({
+-- Nút bấm 17: Target Player
+local Button17 = MainTab:CreateButton({
    Name = "Target Player  ( TSB )",
    Callback = function()
        Rayfield:Notify({
@@ -728,13 +536,13 @@ local Button8 = MainTab:CreateButton({
    end,
 })
 
--- Nút bấm 13: Blox Fruit PC & Molbie
-local Button8 = MainTab:CreateButton({
-   Name = "Script Blox Fruit PC & Molbie ( KEY )",
+-- Nút bấm 18: Script Blox Fruit PC & Mobile (Có Key)
+local Button18 = MainTab:CreateButton({
+   Name = "Script Blox Fruit PC & Mobile ( KEY )",
    Callback = function()
        Rayfield:Notify({
           Title = "Kích Hoạt Thành Công",
-          Content = "Đang chạy script TSB...",
+          Content = "Đang chạy script Blox Fruit KEY...",
           Duration = 5,
           Image = 4483362458,
        })
@@ -742,7 +550,9 @@ local Button8 = MainTab:CreateButton({
            loadstring(game:HttpGet("https://raw.githubusercontent.com/alephi1/BloxFruitScript/refs/heads/main/main.lua"))()
        end)
    end,
-})-- Thông báo khi Hub load xong
+})
+
+-- Thông báo khi Hub load xong hẳn
 Rayfield:Notify({
    Title = "NhatMinh hub ",
    Content = "Hub đã sẵn sàng sử dụng!",
