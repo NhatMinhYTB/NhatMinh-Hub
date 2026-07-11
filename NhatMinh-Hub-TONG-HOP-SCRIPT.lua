@@ -728,7 +728,21 @@ local Button8 = MainTab:CreateButton({
    end,
 })
 
--- Thông báo khi Hub load xong
+-- Nút bấm 13: Blox Fruit PC & Molbie
+local Button8 = MainTab:CreateButton({
+   Name = "Script Blox Fruit PC & Molbie ( KEY )",
+   Callback = function()
+       Rayfield:Notify({
+          Title = "Kích Hoạt Thành Công",
+          Content = "Đang chạy script TSB...",
+          Duration = 5,
+          Image = 4483362458,
+       })
+       pcall(function()
+           loadstring(game:HttpGet("https://raw.githubusercontent.com/alephi1/BloxFruitScript/refs/heads/main/main.lua"))()
+       end)
+   end,
+})-- Thông báo khi Hub load xong
 Rayfield:Notify({
    Title = "NhatMinh hub ",
    Content = "Hub đã sẵn sàng sử dụng!",
