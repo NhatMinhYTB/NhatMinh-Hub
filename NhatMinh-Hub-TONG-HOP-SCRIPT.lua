@@ -568,7 +568,7 @@ local Button18 = MainTab:CreateButton({
    end,
 })
 
--- Nút bấm 18: +1 speed keyboard
+-- Nút bấm 20: +1 speed keyboard
 local Button18 = MainTab:CreateButton({
    Name = "+1 speed keyboard ( no key )",
    Callback = function()
@@ -582,7 +582,173 @@ local Button18 = MainTab:CreateButton({
            loadstring(game:HttpGet("https://www.luxyhub.space/api/loader/luxyhub"))()
        end)
    end,
-})-- Thông báo khi Hub load xong hẳn
+})
+
+-- Nút bấm 21: +1 korblox and headless
+local Button18 = MainTab:CreateButton({
+   Name = "Korblox AND Headless",
+   Callback = function()
+       Rayfield:Notify({
+          Title = "Kích Hoạt Thành Công",
+          Content = "Đang chạy script ...",
+          Duration = 5,
+          Image = 4483362458,
+       })
+       pcall(function()
+           local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local HEADLESS_MESH_ID = "rbxassetid://1095708"    -- Tiny invisible headless mesh
+local KORBLOX_MESH_ID = "rbxassetid://101851696"  -- Korblox right leg mesh (official)
+local KORBLOX_TEXTURE_ID = "rbxassetid://101851254" -- Dark grey texture ID (Korblox leg color)
+local DARK_GREY_COLOR = Color3.fromRGB(64, 64, 64)  -- Dark grey for the Korblox leg
+
+-- Remove face decal if it exists
+local function removeFace(head)
+    local face = head:FindFirstChild("face")
+    if face then
+        face:Destroy()
+    end
+end
+
+-- Apply headless to head (works with dynamic head)
+local function applyHeadless(head)
+    if not head then return end
+
+    head.Transparency = 1
+    head.CanCollide = false
+
+    -- Remove face decal (in case it's floating or respawns)
+    removeFace(head)
+
+    -- Add tiny invisible headless mesh
+    local mesh = Instance.new("SpecialMesh")
+    mesh.MeshType = Enum.MeshType.FileMesh
+    mesh.MeshId = HEADLESS_MESH_ID
+    mesh.Scale = Vector3.new(0.001, 0.001, 0.001)
+    mesh.Parent = head
+
+    -- Lock transparency to make sure headless stays
+    head:GetPropertyChangedSignal("Transparency"):Connect(function()
+        if head.Transparency ~= 1 then
+            head.Transparency = 1
+        end
+    end)
+
+    -- Continuously remove face decal if it respawns
+    head.ChildAdded:Connect(function(child)
+        if child.Name == "face" and child:IsA("Decal") then
+            child:Destroy()
+        end
+    end)
+end
+
+-- Apply Korblox for R6 (Right leg)
+local function applyKorbloxR6(character)
+    local rightLeg = character:FindFirstChild("Right Leg")
+    if not rightLeg then return end
+
+    -- Remove existing meshes
+    for _, child in ipairs(rightLeg:GetChildren()) do
+        if child:IsA("SpecialMesh") or child:IsA("CharacterMesh") then
+            child:Destroy()
+        end
+    end
+
+    -- Lock color to dark grey
+    rightLeg.Color = DARK_GREY_COLOR
+    rightLeg:GetPropertyChangedSignal("Color"):Connect(function()
+        if rightLeg.Color ~= DARK_GREY_COLOR then
+            rightLeg.Color = DARK_GREY_COLOR
+        end
+    end)
+
+    -- Add Korblox mesh with dark grey texture
+    local korbloxMesh = Instance.new("SpecialMesh")
+    korbloxMesh.MeshType = Enum.MeshType.FileMesh
+    korbloxMesh.MeshId = KORBLOX_MESH_ID
+    korbloxMesh.TextureId = KORBLOX_TEXTURE_ID
+    korbloxMesh.Scale = Vector3.new(1, 1, 1)
+    korbloxMesh.Parent = rightLeg
+end
+
+-- Apply Korblox for R15 (Right upper leg)
+local function applyKorbloxR15(character)
+    local rightUpperLeg = character:FindFirstChild("RightUpperLeg")
+    if not rightUpperLeg then return end
+
+    -- Hide original leg parts
+    rightUpperLeg.Transparency = 1
+    local rightLowerLeg = character:FindFirstChild("RightLowerLeg")
+    local rightFoot = character:FindFirstChild("RightFoot")
+    if rightLowerLeg then rightLowerLeg.Transparency = 1 end
+    if rightFoot then rightFoot.Transparency = 1 end
+
+    -- Create Korblox mesh part for R15
+    local korbloxLeg = Instance.new("Part")
+    korbloxLeg.Name = "KorbloxLeg"
+    korbloxLeg.Size = Vector3.new(1, 2, 1)
+    korbloxLeg.Anchored = false
+    korbloxLeg.CanCollide = false
+    korbloxLeg.Color = DARK_GREY_COLOR
+    korbloxLeg.Parent = character
+
+    local mesh = Instance.new("SpecialMesh")
+    mesh.MeshType = Enum.MeshType.FileMesh
+    mesh.MeshId = KORBLOX_MESH_ID
+    mesh.TextureId = KORBLOX_TEXTURE_ID
+    mesh.Scale = Vector3.new(1, 1, 1)
+    mesh.Parent = korbloxLeg
+
+    -- Weld to upper leg so it moves with animations
+    local weld = Instance.new("Weld")
+    weld.Part0 = rightUpperLeg
+    weld.Part1 = korbloxLeg
+    weld.C0 = CFrame.new(0, -0.8, 0)  -- Adjusted to align with leg
+    weld.Parent = korbloxLeg
+end
+
+-- Apply everything after character loads, with a small delay to prevent HumanoidDescription overwrite
+local function applyCharacter(character)
+    local head = character:FindFirstChild("Head")
+    task.wait(0.1) -- Delay to let Roblox apply HumanoidDescription
+    if head then
+        applyHeadless(head)
+    end
+
+    -- Check for rig type and apply accordingly
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        if humanoid.RigType == Enum.HumanoidRigType.R6 then
+            applyKorbloxR6(character)
+        elseif humanoid.RigType == Enum.HumanoidRigType.R15 then
+            applyKorbloxR15(character)
+        end
+    end
+end
+
+-- Ensure the script only runs for the local player
+if player.Character then
+    applyCharacter(player.Character)
+end
+
+-- Connect to CharacterAdded for respawns
+player.CharacterAdded:Connect(function(character)
+    applyCharacter(character)
+end)
+
+-- Optional: Continuously reapply on character changes (in case of rig changes)
+RunService.Heartbeat:Connect(function()
+    if player.Character then
+        applyCharacter(player.Character)
+    end
+end)
+       end)
+   end,
+})
+
+-- Thông báo khi Hub load xong hẳn
 Rayfield:Notify({
    Title = "NhatMinh hub ",
    Content = "Hub đã sẵn sàng sử dụng!",
