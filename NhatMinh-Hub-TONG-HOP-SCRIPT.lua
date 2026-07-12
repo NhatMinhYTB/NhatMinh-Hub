@@ -748,6 +748,22 @@ end)
    end,
 })
 
+-- Nút bấm 22: FIX LAG SCRIPT
+local Button18 = MainTab:CreateButton({
+   Name = "Fix Lag script",
+   Callback = function()
+       Rayfield:Notify({
+          Title = "Kích Hoạt Thành Công",
+          Content = "Đang chạy script ...",
+          Duration = 5,
+          Image = 4483362458,
+       })
+       pcall(function()
+           loadstring(game:HttpGet("https://raw.githubusercontent.com/NhatMinhYTB/FIX-LAG-ROBLOX/main/FIX-LAG-THANHDUY.lua"))()
+       end)
+   end,
+})
+
 -- Thông báo khi Hub load xong hẳn
 Rayfield:Notify({
    Title = "NhatMinh hub ",
