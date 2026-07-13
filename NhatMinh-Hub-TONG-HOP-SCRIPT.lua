@@ -778,7 +778,25 @@ local Button18 = MainTab:CreateButton({
            loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))()
        end)
    end,
-})-- Thông báo khi Hub load xong hẳn
+})
+
+-- Nút bấm 24: wall hop
+local Button18 = MainTab:CreateButton({
+   Name = "Wall Hop Script",
+   Callback = function()
+       Rayfield:Notify({
+          Title = "Kích Hoạt Thành Công",
+          Content = "Đang chạy script wall hop...",
+          Duration = 5,
+          Image = 4483362458,
+       })
+       pcall(function()
+           loadstring(game:HttpGet("https://raw.githubusercontent.com/NhatMinhYTB/Wall-Hop-Script/main/Wall-Hop.lua"))()
+       end)
+   end,
+})
+
+-- Thông báo khi Hub load xong hẳn
 Rayfield:Notify({
    Title = "NhatMinh hub ",
    Content = "Hub đã sẵn sàng sử dụng!",
