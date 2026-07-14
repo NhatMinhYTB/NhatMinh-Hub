@@ -796,6 +796,59 @@ local Button18 = MainTab:CreateButton({
    end,
 })
 
+-- Nút bấm 23: aimbot rivals 
+local Button18 = MainTab:CreateButton({
+   Name = "AimBot Rivals ( Mobile )",
+   Callback = function()
+       Rayfield:Notify({
+          Title = "Kích Hoạt Thành Công",
+          Content = "Đang chạy script RIVALS...",
+          Duration = 5,
+          Image = 4483362458,
+       })
+       pcall(function()
+           -- Services
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+-- Player specific
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local mouse = player:GetMouse()
+
+-- ĐOẠN ĐẦU: SPLASH SCREEN 
+local splashGui = Instance.new("ScreenGui", playerGui)
+splashGui.Name = "SplashGui"
+
+local splashFrame = Instance.new("Frame", splashGui)
+splashFrame.Size = UDim2.new(1,0,1,0)
+splashFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+
+local splashText = Instance.new("TextLabel", splashFrame)
+splashText.Size = UDim2.new(1,0,0,100)
+splashText.Position = UDim2.new(0,0,0.5,-50)
+splashText.BackgroundTransparency = 1
+splashText.Text = "MADE BY Nhật Minh x ZecadaDiv "
+splashText.Font = Enum.Font.GothamBold
+splashText.TextScaled = true
+splashText.TextColor3 = Color3.fromRGB(255,215,0)
+splashText.TextStrokeTransparency = 0
+splashText.TextStrokeColor3 = Color3.new(0,0,0)
+splashText.TextTransparency = 1
+
+TweenService:Create(splashText, TweenInfo.new(0.8), {TextTransparency = 0}):Play()
+task.wait(2)
+TweenService:Create(splashText, TweenInfo.new(0.8), {TextTransparency = 1}):Play()
+task.wait(0.8)
+splashGui:Destroy()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/DanielHubll/DanielHubll/refs/heads/main/Aimbot%20Mobile"))()
+       end)
+   end,
+})
+
 -- Thông báo khi Hub load xong hẳn
 Rayfield:Notify({
    Title = "NhatMinh hub ",
