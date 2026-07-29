@@ -796,7 +796,7 @@ local Button18 = MainTab:CreateButton({
    end,
 })
 
--- Nút bấm 23: aimbot rivals 
+-- Nút bấm 2525: aimbot rivals 
 local Button18 = MainTab:CreateButton({
    Name = "AimBot Rivals ( Mobile )",
    Callback = function()
@@ -845,6 +845,38 @@ TweenService:Create(splashText, TweenInfo.new(0.8), {TextTransparency = 1}):Play
 task.wait(0.8)
 splashGui:Destroy()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/DanielHubll/DanielHubll/refs/heads/main/Aimbot%20Mobile"))()
+       end)
+   end,
+})
+
+-- Nút bấm 26: Good Mod
+local Button18 = MainTab:CreateButton({
+   Name = "Good Mod",
+   Callback = function()
+       Rayfield:Notify({
+          Title = "Kích Hoạt Thành Công",
+          Content = "Đang chạy script ...",
+          Duration = 5,
+          Image = 4483362458,
+       })
+       pcall(function()
+           loadstring(game:HttpGet("https://raw.githubusercontent.com/NhatMinhYTB/Good-Mod-Script/main/Good-Mod.lua"))()
+       end)
+   end,
+})
+
+-- Nút bấm 27: ném đồ vật
+local Button18 = MainTab:CreateButton({
+   Name = "Ném đồ vật và người",
+   Callback = function()
+       Rayfield:Notify({
+          Title = "Kích Hoạt Thành Công",
+          Content = "Đang chạy script ...",
+          Duration = 5,
+          Image = 4483362458,
+       })
+       pcall(function()
+           loadstring(game:HttpGet("https://you.whimper.xyz/sources/blitz/source.lua"))()
        end)
    end,
 })
