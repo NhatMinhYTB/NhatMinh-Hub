@@ -881,6 +881,649 @@ local Button18 = MainTab:CreateButton({
    end,
 })
 
+-- Nút bấm 28: aim
+local Button18 = MainTab:CreateButton({
+   Name = "aim fling things and people ( only PC )",
+   Callback = function()
+       Rayfield:Notify({
+          Title = "Kích Hoạt Thành Công",
+          Content = "Đang chạy script ...",
+          Duration = 5,
+          Image = 4483362458,
+       })
+       pcall(function()
+           local TweenService    = game:GetService("TweenService")
+local UserInputService= game:GetService("UserInputService")
+local RunService      = game:GetService("RunService")
+local player          = game.Players.LocalPlayer
+local playerGui       = player:WaitForChild("PlayerGui")
+
+local splashGui = Instance.new("ScreenGui", playerGui)
+splashGui.Name = "SplashGui"
+local splashFrame = Instance.new("Frame", splashGui)
+splashFrame.Size = UDim2.new(1,0,1,0)
+splashFrame.BackgroundColor3 = Color3.fromRGB(15,0,0)
+local splashText = Instance.new("TextLabel", splashFrame)
+splashText.Size = UDim2.new(1,0,0,100)
+splashText.Position = UDim2.new(0,0,0.5,-50)
+splashText.BackgroundTransparency = 1
+splashText.Text = "MADE BY Nhật Minh"
+splashText.Font = Enum.Font.GothamBold
+splashText.TextScaled = true
+splashText.TextColor3 = Color3.fromRGB(255,50,50)
+splashText.TextStrokeTransparency = 0
+splashText.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+splashText.TextTransparency = 1
+TweenService:Create(splashText, TweenInfo.new(0.8), {TextTransparency = 0}):Play()
+task.wait(2)
+TweenService:Create(splashText, TweenInfo.new(0.8), {TextTransparency = 1}):Play()
+task.wait(0.8)
+splashGui:Destroy()
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local AIM_KEY = Enum.KeyCode.Q
+local aimRange = 50       
+local cameraFOV = 70      
+local aimSpeed = 6       
+local selectedTarget = nil 
+
+local isAiming = false
+local renderConnection = nil
+
+pcall(function()
+    StarterGui:SetCore("SendNotification", {
+        Title = "AIMBOT MENU",
+        Text = "NHẤN Q ĐỂ AIM | NÚT 'M' ĐỂ MỞ/ẨN MENU",
+        Duration = 5
+    })
+end)
+
+local function getTorso(character)
+    if not character then return nil end
+    return character:FindFirstChild("UpperTorso") 
+        or character:FindFirstChild("Torso") 
+        or character:FindFirstChild("HumanoidRootPart")
+end
+
+local function getClosestPlayerInRange()
+    local closestTorso = nil
+    local shortestDistance = aimRange
+
+    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        return nil
+    end
+
+    local myPos = LocalPlayer.Character.HumanoidRootPart.Position
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+            local torso = getTorso(player.Character)
+
+            if humanoid and humanoid.Health > 0 and torso then
+                local worldDist = (torso.Position - myPos).Magnitude
+                if worldDist <= shortestDistance then
+                    shortestDistance = worldDist
+                    closestTorso = torso
+                end
+            end
+        end
+    end
+    return closestTorso
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AimMenuGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.DisplayOrder = 999999999 
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 300, 0, 430)
+MainFrame.Position = UDim2.new(0.5, -150, 0.35, -215)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+MainFrame.BorderSizePixel = 3
+MainFrame.ZIndex = 100
+MainFrame.Active = true
+MainFrame.Draggable = true 
+MainFrame.Parent = ScreenGui
+
+local hue = 0
+RunService.RenderStepped:Connect(function(delta)
+    hue = (hue + delta * 0.3) % 1
+    MainFrame.BorderColor3 = Color3.fromHSV(hue, 1, 1)
+end)
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+Title.Text = "MENU AIMBOT & CAMERA FOV"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 15
+Title.Font = Enum.Font.SourceSansBold
+Title.ZIndex = 101
+Title.Parent = MainFrame
+
+local function createButton(text, pos, size, parent)
+    local btn = Instance.new("TextButton")
+    btn.Text = text
+    btn.Position = pos
+    btn.Size = size
+    btn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 14
+    btn.ZIndex = 102
+    btn.Parent = parent
+    return btn
+end
+
+local RangeLabel = Instance.new("TextLabel", MainFrame)
+RangeLabel.Position = UDim2.new(0, 10, 0, 42)
+RangeLabel.Size = UDim2.new(1, -20, 0, 18)
+RangeLabel.Text = "Tầm xa Aim (Range): " .. aimRange .. " studs"
+RangeLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+RangeLabel.BackgroundTransparency = 1
+RangeLabel.ZIndex = 101
+
+local RangeDec = createButton("-10 Range", UDim2.new(0, 10, 0, 62), UDim2.new(0, 135, 0, 24), MainFrame)
+local RangeInc = createButton("+10 Range", UDim2.new(0, 155, 0, 62), UDim2.new(0, 135, 0, 24), MainFrame)
+
+RangeDec.MouseButton1Click:Connect(function()
+    aimRange = math.max(10, aimRange - 10)
+    RangeLabel.Text = "Tầm xa Aim (Range): " .. aimRange .. " studs"
+end)
+RangeInc.MouseButton1Click:Connect(function()
+    aimRange = aimRange + 10
+    RangeLabel.Text = "Tầm xa Aim (Range): " .. aimRange .. " studs"
+end)
+
+local FovLabel = Instance.new("TextLabel", MainFrame)
+FovLabel.Position = UDim2.new(0, 10, 0, 92)
+FovLabel.Size = UDim2.new(1, -20, 0, 18)
+FovLabel.Text = "FOV Góc Nhìn Camera: " .. cameraFOV
+FovLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+FovLabel.BackgroundTransparency = 1
+FovLabel.ZIndex = 101
+
+local FovDec = createButton("-5 Camera FOV", UDim2.new(0, 10, 0, 112), UDim2.new(0, 135, 0, 24), MainFrame)
+local FovInc = createButton("+5 Camera FOV", UDim2.new(0, 155, 0, 112), UDim2.new(0, 135, 0, 24), MainFrame)
+
+local function updateCameraFOV(newFov)
+    cameraFOV = math.clamp(newFov, 30, 120)
+    Camera.FieldOfView = cameraFOV
+    FovLabel.Text = "FOV Góc Nhìn Camera: " .. cameraFOV
+end
+
+FovDec.MouseButton1Click:Connect(function() updateCameraFOV(cameraFOV - 5) end)
+FovInc.MouseButton1Click:Connect(function() updateCameraFOV(cameraFOV + 5) end)
+
+local SpeedLabel = Instance.new("TextLabel", MainFrame)
+SpeedLabel.Position = UDim2.new(0, 10, 0, 142)
+SpeedLabel.Size = UDim2.new(1, -20, 0, 18)
+SpeedLabel.Text = "Tốc độ xoay Aim: " .. aimSpeed .. " / 10"
+SpeedLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+SpeedLabel.BackgroundTransparency = 1
+SpeedLabel.ZIndex = 101
+
+local SpeedDec = createButton("-1 Tốc độ", UDim2.new(0, 10, 0, 162), UDim2.new(0, 135, 0, 24), MainFrame)
+local SpeedInc = createButton("+1 Tốc độ", UDim2.new(0, 155, 0, 162), UDim2.new(0, 135, 0, 24), MainFrame)
+
+SpeedDec.MouseButton1Click:Connect(function()
+    aimSpeed = math.clamp(aimSpeed - 1, 1, 10)
+    SpeedLabel.Text = "Tốc độ xoay Aim: " .. aimSpeed .. " / 10"
+end)
+SpeedInc.MouseButton1Click:Connect(function()
+    aimSpeed = math.clamp(aimSpeed + 1, 1, 10)
+    SpeedLabel.Text = "Tốc độ xoay Aim: " .. aimSpeed .. " / 10"
+end)
+
+local TargetLabel = Instance.new("TextLabel", MainFrame)
+TargetLabel.Position = UDim2.new(0, 10, 0, 192)
+TargetLabel.Size = UDim2.new(1, -20, 0, 18)
+TargetLabel.Text = "AIM KIỂU 2: Tự động (Người gần nhất)"
+TargetLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+TargetLabel.BackgroundTransparency = 1
+TargetLabel.ZIndex = 101
+
+local ScrollView = Instance.new("ScrollingFrame", MainFrame)
+ScrollView.Position = UDim2.new(0, 10, 0, 212)
+ScrollView.Size = UDim2.new(1, -20, 0, 205)
+ScrollView.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+ScrollView.CanvasSize = UDim2.new(0, 0, 0, 0)
+ScrollView.ZIndex = 101
+ScrollView.ScrollBarThickness = 6
+
+local UIListLayout = Instance.new("UIListLayout", ScrollView)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 2)
+
+local function updatePlayerList()
+    for _, child in pairs(ScrollView:GetChildren()) do
+        if child:IsA("TextButton") then child:Destroy() end
+    end
+
+    local clearBtn = createButton("[ Xóa chọn - Về Aim Kiểu 1 ]", UDim2.new(0, 0, 0, 0), UDim2.new(1, -8, 0, 25), ScrollView)
+    clearBtn.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
+    clearBtn.MouseButton1Click:Connect(function()
+        selectedTarget = nil
+        TargetLabel.Text = "AIM KIỂU 2: Tự động (Người gần nhất)"
+    end)
+
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            local pBtn = createButton(plr.DisplayName .. " (@" .. plr.Name .. ")", UDim2.new(0, 0, 0, 0), UDim2.new(1, -8, 0, 25), ScrollView)
+            pBtn.MouseButton1Click:Connect(function()
+                selectedTarget = plr
+                TargetLabel.Text = "AIM Kiểu 2: " .. plr.DisplayName
+            end)
+        end
+    end
+    ScrollView.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
+end
+
+Players.PlayerAdded:Connect(updatePlayerList)
+Players.PlayerRemoving:Connect(updatePlayerList)
+updatePlayerList()
+
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if not gpe and input.KeyCode == Enum.KeyCode.M then
+        MainFrame.Visible = not MainFrame.Visible
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+
+    if input.KeyCode == AIM_KEY then
+        local targetTorso = nil
+
+        if selectedTarget and selectedTarget.Character then
+            targetTorso = getTorso(selectedTarget.Character)
+        else
+            targetTorso = getClosestPlayerInRange()
+        end
+
+        if targetTorso then
+            isAiming = true
+            if renderConnection then renderConnection:Disconnect() end
+            
+            renderConnection = RunService.RenderStepped:Connect(function(delta)
+                if isAiming and targetTorso and targetTorso.Parent and targetTorso.Parent:FindFirstChildOfClass("Humanoid").Health > 0 then
+                    local targetCFrame = CFrame.new(Camera.CFrame.Position, targetTorso.Position)
+                    local lerpFactor = math.clamp((aimSpeed / 10) * (delta * 60), 0.1, 1)
+                    
+                    Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, lerpFactor)
+                else
+                    isAiming = false
+                    if renderConnection then
+                        renderConnection:Disconnect()
+                        renderConnection = nil
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.KeyCode == AIM_KEY then
+        isAiming = false
+        if renderConnection then
+            renderConnection:Disconnect()
+            renderConnection = nil
+        end
+    end
+end)
+       end)
+   end,
+})
+
+-- Nút bấm 29: wall hop
+local Button18 = MainTab:CreateButton({
+   Name = "WALL HOP ",
+   Callback = function()
+       Rayfield:Notify({
+          Title = "Kích Hoạt Thành Công",
+          Content = "Đang chạy script ...",
+          Duration = 5,
+          Image = 4483362458,
+       })
+       pcall(function()
+           local v0 = game:GetService("Players");
+local v1 = v0.LocalPlayer;
+local v2 = game:GetService("RunService");
+local v3 = game:GetService("UserInputService");
+local v4 = game:GetService("TweenService");
+local v5 = v1:WaitForChild("PlayerGui");
+
+local splashGui = Instance.new("ScreenGui", v5)
+splashGui.Name = "SplashGui"
+
+local splashFrame = Instance.new("Frame", splashGui)
+splashFrame.Size = UDim2.new(1, 0, 1, 0)
+splashFrame.BackgroundColor3 = Color3.fromRGB(12, 0, 0)
+
+local splashText = Instance.new("TextLabel", splashFrame)
+splashText.Size = UDim2.new(1, 0, 0, 100)
+splashText.Position = UDim2.new(0, 0, 0.5, -50)
+splashText.BackgroundTransparency = 1
+splashText.Text = "MADE BY Nhật Minh"
+splashText.Font = Enum.Font.GothamBold
+splashText.TextScaled = true
+splashText.TextColor3 = Color3.fromRGB(230, 0, 0)
+splashText.TextStrokeTransparency = 0
+splashText.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+splashText.TextTransparency = 1
+
+task.spawn(function()
+	v4:Create(splashText, TweenInfo.new(0.8), {TextTransparency = 0}):Play()
+	task.wait(2)
+	v4:Create(splashText, TweenInfo.new(0.8), {TextTransparency = 1}):Play()
+	task.wait(0.8)
+	splashGui:Destroy()
+end)
+
+
+local MainGui = Instance.new("ScreenGui")
+MainGui.Name = "NhatMinhHubMenu"
+MainGui.ResetOnSpawn = false
+MainGui.Parent = v5
+
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Name = "ToggleMenuBtn"
+ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
+ToggleBtn.Position = UDim2.new(0, 15, 0.4, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+ToggleBtn.Text = "NM"
+ToggleBtn.TextColor3 = Color3.fromRGB(220, 20, 20)
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextSize = 18
+ToggleBtn.Parent = MainGui
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 10)
+ToggleCorner.Parent = ToggleBtn
+
+local ToggleStroke = Instance.new("UIStroke")
+ToggleStroke.Color = Color3.fromRGB(180, 0, 0)
+ToggleStroke.Thickness = 1.5
+ToggleStroke.Parent = ToggleBtn
+
+local MenuFrame = Instance.new("Frame")
+MenuFrame.Name = "MainFrame"
+MenuFrame.Size = UDim2.new(0, 220, 0, 175)
+MenuFrame.Position = UDim2.new(0.5, -110, 0.5, -87)
+MenuFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MenuFrame.ClipsDescendants = true
+MenuFrame.Visible = true
+MenuFrame.Parent = MainGui
+
+local MenuCorner = Instance.new("UICorner")
+MenuCorner.CornerRadius = UDim.new(0, 8)
+MenuCorner.Parent = MenuFrame
+
+local MenuStroke = Instance.new("UIStroke")
+MenuStroke.Color = Color3.fromRGB(180, 0, 0)
+MenuStroke.Thickness = 2
+MenuStroke.Parent = MenuFrame
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "Title"
+TitleLabel.Size = UDim2.new(1, 0, 0, 35)
+TitleLabel.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+TitleLabel.Text = "NHAT MINH HUB"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextSize = 14
+TitleLabel.Parent = MenuFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 8)
+TitleCorner.Parent = TitleLabel
+
+local dragging, dragInput, dragStart, startPos
+local function update(input)
+	local delta = input.Position - dragStart
+	MenuFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+MenuFrame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = MenuFrame.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+MenuFrame.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+v3.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		update(input)
+	end
+end)
+
+ToggleBtn.MouseButton1Click:Connect(function()
+	MenuFrame.Visible = not MenuFrame.Visible
+end)
+
+local function createMenuButton(name, text, pos)
+	local btn = Instance.new("TextButton")
+	btn.Name = name
+	btn.Size = UDim2.new(0.9, 0, 0, 42)
+	btn.Position = pos
+	btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	btn.Text = text
+	btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 13
+	btn.Parent = MenuFrame
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 6)
+	corner.Parent = btn
+
+	local btnStroke = Instance.new("UIStroke")
+	btnStroke.Color = Color3.fromRGB(60, 60, 60)
+	btnStroke.Thickness = 1
+	btnStroke.Parent = btn
+	return btn, btnStroke
+end
+
+local v25, v25Stroke = createMenuButton("HopNgangButton", "Wall Hop Ngang: OFF", UDim2.new(0.05, 0, 0, 50))
+local v26, v26Stroke = createMenuButton("HopDocButton", "Wall Hop Dọc: OFF", UDim2.new(0.05, 0, 0, 107))
+
+local v31 = false;
+local v32 = false;
+local v33 = false;
+local v34 = 0;
+local v35 = workspace.CurrentCamera;
+local v36 = nil;
+
+local function v37()
+	local v61 = 0;
+	local v62, v63, v64, v65;
+	while true do
+		if (v61 == 3) then
+			v33 = false;
+			break;
+		end
+		if (v61 == 2) then
+			v65 = v35.CFrame;
+			v35.CFrame = v65 * CFrame.Angles(0, math.rad(180), 0);
+			task.wait(0.01);
+			v35.CFrame = v65;
+			v61 = 3;
+		end
+		if (v61 == 0) then
+			if v33 then return end;
+			v33 = true;
+			v62 = v1.Character;
+			v63 = v62 and v62:FindFirstChild("Humanoid");
+			v61 = 1;
+		end
+		if (v61 == 1) then
+			v64 = v62 and v62:FindFirstChild("HumanoidRootPart");
+			if (not v63 or not v64) then
+				v33 = false;
+				return;
+			end
+			v63:ChangeState(Enum.HumanoidStateType.Jumping);
+			if v64:IsA("BasePart") then
+				v64.AssemblyLinearVelocity = Vector3.new(v64.AssemblyLinearVelocity.X, 50, v64.AssemblyLinearVelocity.Z);
+			end
+			v61 = 2;
+		end
+	end
+end
+
+local v38 = nil;
+v2.Heartbeat:Connect(function()
+	local v66 = 0;
+	local v67, v68, v69, v70;
+	while true do
+		if (v66 == 4) then
+			if (v70 and v70.Instance.CanCollide) then
+				local v95 = 0;
+				local v96;
+				while true do
+					if (v95 == 1) then
+						v38 = v96;
+						break;
+					end
+					if (0 == v95) then
+						v96 = v70.Instance;
+						if (v38 and (v38 ~= v96)) then
+							local v103 = 0;
+							local v104;
+							while true do
+								if (v103 == 0) then
+									v104 = 0.05;
+									if v32 then v104 = 0.3 end;
+									v103 = 1;
+								end
+								if (v103 == 1) then
+									if ((v96 ~= v36) and ((os.clock() - v34) > v104)) then
+										v34 = os.clock();
+										v36 = v96;
+										v37();
+									end
+									break;
+								end
+							end
+						end
+						v95 = 1;
+					end
+				end
+			else
+				v38 = nil;
+				if not v70 then v36 = nil end;
+			end
+			break;
+		end
+		if (v66 == 1) then
+			v68 = v67 and v67:FindFirstChild("HumanoidRootPart");
+			if not v68 then return end;
+			v66 = 2;
+		end
+		if (2 == v66) then
+			v69 = RaycastParams.new();
+			v69.FilterDescendantsInstances = {v67};
+			v66 = 3;
+		end
+		if (v66 == 0) then
+			if (not v31 and not v32) then return end;
+			v67 = v1.Character;
+			v66 = 1;
+		end
+		if (v66 == 3) then
+			v69.FilterType = Enum.RaycastFilterType.Exclude;
+			v70 = workspace:Raycast(v68.Position, v35.CFrame.LookVector * 3, v69);
+			v66 = 4;
+		end
+	end
+end);
+
+v25.MouseButton1Click:Connect(function()
+	v31 = not v31;
+	if v31 then
+		v32 = false;
+		v25.Text = "Wall Hop Ngang: ON";
+		v25.BackgroundColor3 = Color3.fromRGB(180, 20, 20);
+		v25.TextColor3 = Color3.fromRGB(255, 255, 255);
+		v25Stroke.Color = Color3.fromRGB(255, 60, 60);
+		
+		v26.Text = "Wall Hop Dọc: OFF";
+		v26.BackgroundColor3 = Color3.fromRGB(25, 25, 25);
+		v26.TextColor3 = Color3.fromRGB(200, 200, 200);
+		v26Stroke.Color = Color3.fromRGB(60, 60, 60);
+	else
+		v25.Text = "Wall Hop Ngang: OFF";
+		v25.BackgroundColor3 = Color3.fromRGB(25, 25, 25);
+		v25.TextColor3 = Color3.fromRGB(200, 200, 200);
+		v25Stroke.Color = Color3.fromRGB(60, 60, 60);
+	end
+end);
+
+v26.MouseButton1Click:Connect(function()
+	v32 = not v32;
+	if v32 then
+		v31 = false;
+		v26.Text = "Wall Hop Dọc: ON";
+		v26.BackgroundColor3 = Color3.fromRGB(180, 20, 20);
+		v26.TextColor3 = Color3.fromRGB(255, 255, 255);
+		v26Stroke.Color = Color3.fromRGB(255, 60, 60);
+		
+		v25.Text = "Wall Hop Ngang: OFF";
+		v25.BackgroundColor3 = Color3.fromRGB(25, 25, 25);
+		v25.TextColor3 = Color3.fromRGB(200, 200, 200);
+		v25Stroke.Color = Color3.fromRGB(60, 60, 60);
+	else
+		v26.Text = "Wall Hop Dọc: OFF";
+		v26.BackgroundColor3 = Color3.fromRGB(25, 25, 25);
+		v26.TextColor3 = Color3.fromRGB(200, 200, 200);
+		v26Stroke.Color = Color3.fromRGB(60, 60, 60);
+	end
+end);
+
+print("NhatMinh Hub Auto Wall Hop Loaded Successfully!");
+       end)
+   end,
+})
+
+-- Nút bấm 30: evade
+local Button18 = MainTab:CreateButton({
+   Name = "Auto Farm Event (Evade)",
+   Callback = function()
+       Rayfield:Notify({
+          Title = "Kích Hoạt Thành Công",
+          Content = "Đang chạy script ...",
+          Duration = 5,
+          Image = 4483362458,
+       })
+       pcall(function()
+           loadstring(game:HttpGet("https://raw.githubusercontent.com/NhatMinhYTB/Auto-Farm-Event/main/Farm-Event.lua"))()
+       end)
+   end,
+})
+
 -- Thông báo khi Hub load xong hẳn
 Rayfield:Notify({
    Title = "NhatMinh hub ",
