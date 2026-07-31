@@ -893,16 +893,22 @@ local Button18 = MainTab:CreateButton({
        })
        pcall(function()
            local TweenService    = game:GetService("TweenService")
+local TweenService    = game:GetService("TweenService")
 local UserInputService= game:GetService("UserInputService")
 local RunService      = game:GetService("RunService")
-local player          = game.Players.LocalPlayer
+local Players         = game:GetService("Players")
+local StarterGui      = game:GetService("StarterGui")
+
+local player          = Players.LocalPlayer
 local playerGui       = player:WaitForChild("PlayerGui")
+local Camera          = workspace.CurrentCamera
 
 local splashGui = Instance.new("ScreenGui", playerGui)
 splashGui.Name = "SplashGui"
 local splashFrame = Instance.new("Frame", splashGui)
 splashFrame.Size = UDim2.new(1,0,1,0)
 splashFrame.BackgroundColor3 = Color3.fromRGB(15,0,0)
+
 local splashText = Instance.new("TextLabel", splashFrame)
 splashText.Size = UDim2.new(1,0,0,100)
 splashText.Position = UDim2.new(0,0,0.5,-50)
@@ -914,33 +920,67 @@ splashText.TextColor3 = Color3.fromRGB(255,50,50)
 splashText.TextStrokeTransparency = 0
 splashText.TextStrokeColor3 = Color3.fromRGB(0,0,0)
 splashText.TextTransparency = 1
+
 TweenService:Create(splashText, TweenInfo.new(0.8), {TextTransparency = 0}):Play()
 task.wait(2)
 TweenService:Create(splashText, TweenInfo.new(0.8), {TextTransparency = 1}):Play()
 task.wait(0.8)
 splashGui:Destroy()
 
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local StarterGui = game:GetService("StarterGui")
-
-local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
-
+local currentLang = "VIE" 
 local AIM_KEY = Enum.KeyCode.Q
 local aimRange = 50       
 local cameraFOV = 70      
 local aimSpeed = 6       
 local selectedTarget = nil 
-
 local isAiming = false
 local renderConnection = nil
 
+local i18n = {
+    VIE = {
+        NotifTitle = "AIMBOT MENU",
+        NotifText = "NHẤN Q ĐỂ AIM | NÚT 'M' ĐỂ MỞ/ẨN MENU",
+        Title = "MENU AIMBOT & CAMERA FOV",
+        Range = "Tầm xa Aim (Range): ",
+        RangeStuds = " studs",
+        RangeDec = "-10 Tầm xa",
+        RangeInc = "+10 Tầm xa",
+        Fov = "FOV Góc Nhìn Camera: ",
+        FovDec = "-5 Camera FOV",
+        FovInc = "+5 Camera FOV",
+        Speed = "Tốc độ xoay Aim: ",
+        SpeedDec = "-1 Tốc độ",
+        SpeedInc = "+1 Tốc độ",
+        TargetAuto = "AIM KIỂU 2: Tự động (Gần nhất)",
+        TargetSelected = "AIM Kiểu 2: ",
+        ClearBtn = "[ Xóa chọn - Về Aim Kiểu 1 ]",
+        RefreshBtn = "🔄 Làm mới danh sách"
+    },
+    ENG = {
+        NotifTitle = "AIMBOT MENU",
+        NotifText = "PRESS Q TO AIM | PRESS 'M' TO TOGGLE MENU",
+        Title = "AIMBOT & CAMERA FOV MENU",
+        Range = "Aim Distance (Range): ",
+        RangeStuds = " studs",
+        RangeDec = "-10 Range",
+        RangeInc = "+10 Range",
+        Fov = "Camera FOV: ",
+        FovDec = "-5 Camera FOV",
+        FovInc = "+5 Camera FOV",
+        Speed = "Aim Speed: ",
+        SpeedDec = "-1 Speed",
+        SpeedInc = "+1 Speed",
+        TargetAuto = "AIM TYPE 2: Auto (Closest)",
+        TargetSelected = "AIM Type 2: ",
+        ClearBtn = "[ Clear Target - Back to Type 1 ]",
+        RefreshBtn = "🔄 Refresh Player List"
+    }
+}
+
 pcall(function()
     StarterGui:SetCore("SendNotification", {
-        Title = "AIMBOT MENU",
-        Text = "NHẤN Q ĐỂ AIM | NÚT 'M' ĐỂ MỞ/ẨN MENU",
+        Title = i18n[currentLang].NotifTitle,
+        Text = i18n[currentLang].NotifText,
         Duration = 5
     })
 end)
@@ -956,16 +996,16 @@ local function getClosestPlayerInRange()
     local closestTorso = nil
     local shortestDistance = aimRange
 
-    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
         return nil
     end
 
-    local myPos = LocalPlayer.Character.HumanoidRootPart.Position
+    local myPos = player.Character.HumanoidRootPart.Position
 
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-            local torso = getTorso(player.Character)
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= player and p.Character then
+            local humanoid = p.Character:FindFirstChildOfClass("Humanoid")
+            local torso = getTorso(p.Character)
 
             if humanoid and humanoid.Health > 0 and torso then
                 local worldDist = (torso.Position - myPos).Magnitude
@@ -983,11 +1023,11 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "AimMenuGUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.DisplayOrder = 999999999 
-ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 300, 0, 430)
-MainFrame.Position = UDim2.new(0.5, -150, 0.35, -215)
+MainFrame.Size = UDim2.new(0, 310, 0, 470)
+MainFrame.Position = UDim2.new(0.5, -155, 0.35, -235)
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 MainFrame.BorderSizePixel = 3
 MainFrame.ZIndex = 100
@@ -1002,11 +1042,12 @@ RunService.RenderStepped:Connect(function(delta)
 end)
 
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Size = UDim2.new(1, -70, 0, 35)
+Title.Position = UDim2.new(0, 0, 0, 0)
 Title.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-Title.Text = "MENU AIMBOT & CAMERA FOV"
+Title.Text = i18n[currentLang].Title
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 15
+Title.TextSize = 13
 Title.Font = Enum.Font.SourceSansBold
 Title.ZIndex = 101
 Title.Parent = MainFrame
@@ -1019,83 +1060,58 @@ local function createButton(text, pos, size, parent)
     btn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.SourceSansBold
-    btn.TextSize = 14
+    btn.TextSize = 13
     btn.ZIndex = 102
     btn.Parent = parent
     return btn
 end
 
+local LangBtn = createButton("VIE", UDim2.new(1, -65, 0, 5), UDim2.new(0, 60, 0, 25), MainFrame)
+LangBtn.BackgroundColor3 = Color3.fromRGB(60, 80, 140)
+
 local RangeLabel = Instance.new("TextLabel", MainFrame)
 RangeLabel.Position = UDim2.new(0, 10, 0, 42)
 RangeLabel.Size = UDim2.new(1, -20, 0, 18)
-RangeLabel.Text = "Tầm xa Aim (Range): " .. aimRange .. " studs"
 RangeLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 RangeLabel.BackgroundTransparency = 1
 RangeLabel.ZIndex = 101
 
-local RangeDec = createButton("-10 Range", UDim2.new(0, 10, 0, 62), UDim2.new(0, 135, 0, 24), MainFrame)
-local RangeInc = createButton("+10 Range", UDim2.new(0, 155, 0, 62), UDim2.new(0, 135, 0, 24), MainFrame)
-
-RangeDec.MouseButton1Click:Connect(function()
-    aimRange = math.max(10, aimRange - 10)
-    RangeLabel.Text = "Tầm xa Aim (Range): " .. aimRange .. " studs"
-end)
-RangeInc.MouseButton1Click:Connect(function()
-    aimRange = aimRange + 10
-    RangeLabel.Text = "Tầm xa Aim (Range): " .. aimRange .. " studs"
-end)
+local RangeDec = createButton("", UDim2.new(0, 10, 0, 62), UDim2.new(0, 140, 0, 24), MainFrame)
+local RangeInc = createButton("", UDim2.new(0, 160, 0, 62), UDim2.new(0, 140, 0, 24), MainFrame)
 
 local FovLabel = Instance.new("TextLabel", MainFrame)
 FovLabel.Position = UDim2.new(0, 10, 0, 92)
 FovLabel.Size = UDim2.new(1, -20, 0, 18)
-FovLabel.Text = "FOV Góc Nhìn Camera: " .. cameraFOV
 FovLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 FovLabel.BackgroundTransparency = 1
 FovLabel.ZIndex = 101
 
-local FovDec = createButton("-5 Camera FOV", UDim2.new(0, 10, 0, 112), UDim2.new(0, 135, 0, 24), MainFrame)
-local FovInc = createButton("+5 Camera FOV", UDim2.new(0, 155, 0, 112), UDim2.new(0, 135, 0, 24), MainFrame)
-
-local function updateCameraFOV(newFov)
-    cameraFOV = math.clamp(newFov, 30, 120)
-    Camera.FieldOfView = cameraFOV
-    FovLabel.Text = "FOV Góc Nhìn Camera: " .. cameraFOV
-end
-
-FovDec.MouseButton1Click:Connect(function() updateCameraFOV(cameraFOV - 5) end)
-FovInc.MouseButton1Click:Connect(function() updateCameraFOV(cameraFOV + 5) end)
+local FovDec = createButton("", UDim2.new(0, 10, 0, 112), UDim2.new(0, 140, 0, 24), MainFrame)
+local FovInc = createButton("", UDim2.new(0, 160, 0, 112), UDim2.new(0, 140, 0, 24), MainFrame)
 
 local SpeedLabel = Instance.new("TextLabel", MainFrame)
 SpeedLabel.Position = UDim2.new(0, 10, 0, 142)
 SpeedLabel.Size = UDim2.new(1, -20, 0, 18)
-SpeedLabel.Text = "Tốc độ xoay Aim: " .. aimSpeed .. " / 10"
 SpeedLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 SpeedLabel.BackgroundTransparency = 1
 SpeedLabel.ZIndex = 101
 
-local SpeedDec = createButton("-1 Tốc độ", UDim2.new(0, 10, 0, 162), UDim2.new(0, 135, 0, 24), MainFrame)
-local SpeedInc = createButton("+1 Tốc độ", UDim2.new(0, 155, 0, 162), UDim2.new(0, 135, 0, 24), MainFrame)
-
-SpeedDec.MouseButton1Click:Connect(function()
-    aimSpeed = math.clamp(aimSpeed - 1, 1, 10)
-    SpeedLabel.Text = "Tốc độ xoay Aim: " .. aimSpeed .. " / 10"
-end)
-SpeedInc.MouseButton1Click:Connect(function()
-    aimSpeed = math.clamp(aimSpeed + 1, 1, 10)
-    SpeedLabel.Text = "Tốc độ xoay Aim: " .. aimSpeed .. " / 10"
-end)
+local SpeedDec = createButton("", UDim2.new(0, 10, 0, 162), UDim2.new(0, 140, 0, 24), MainFrame)
+local SpeedInc = createButton("", UDim2.new(0, 160, 0, 162), UDim2.new(0, 140, 0, 24), MainFrame)
 
 local TargetLabel = Instance.new("TextLabel", MainFrame)
 TargetLabel.Position = UDim2.new(0, 10, 0, 192)
 TargetLabel.Size = UDim2.new(1, -20, 0, 18)
-TargetLabel.Text = "AIM KIỂU 2: Tự động (Người gần nhất)"
 TargetLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
 TargetLabel.BackgroundTransparency = 1
 TargetLabel.ZIndex = 101
 
+local RefreshBtn = createButton("", UDim2.new(0, 10, 0, 214), UDim2.new(1, -20, 0, 24), MainFrame)
+RefreshBtn.BackgroundColor3 = Color3.fromRGB(40, 100, 50)
+
 local ScrollView = Instance.new("ScrollingFrame", MainFrame)
-ScrollView.Position = UDim2.new(0, 10, 0, 212)
-ScrollView.Size = UDim2.new(1, -20, 0, 205)
+ScrollView.Position = UDim2.new(0, 10, 0, 242)
+ScrollView.Size = UDim2.new(1, -20, 0, 215)
 ScrollView.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
 ScrollView.CanvasSize = UDim2.new(0, 0, 0, 0)
 ScrollView.ZIndex = 101
@@ -1105,32 +1121,101 @@ local UIListLayout = Instance.new("UIListLayout", ScrollView)
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 UIListLayout.Padding = UDim.new(0, 2)
 
+local function updateUI()
+    local t = i18n[currentLang]
+    Title.Text = t.Title
+    RangeLabel.Text = t.Range .. aimRange .. t.RangeStuds
+    RangeDec.Text = t.RangeDec
+    RangeInc.Text = t.RangeInc
+    
+    FovLabel.Text = t.Fov .. cameraFOV
+    FovDec.Text = t.FovDec
+    FovInc.Text = t.FovInc
+    
+    SpeedLabel.Text = t.Speed .. aimSpeed .. " / 10"
+    SpeedDec.Text = t.SpeedDec
+    SpeedInc.Text = t.SpeedInc
+    
+    RefreshBtn.Text = t.RefreshBtn
+    
+    if selectedTarget then
+        TargetLabel.Text = t.TargetSelected .. selectedTarget.DisplayName
+    else
+        TargetLabel.Text = t.TargetAuto
+    end
+end
+
 local function updatePlayerList()
     for _, child in pairs(ScrollView:GetChildren()) do
         if child:IsA("TextButton") then child:Destroy() end
     end
 
-    local clearBtn = createButton("[ Xóa chọn - Về Aim Kiểu 1 ]", UDim2.new(0, 0, 0, 0), UDim2.new(1, -8, 0, 25), ScrollView)
+    local clearBtn = createButton(i18n[currentLang].ClearBtn, UDim2.new(0, 0, 0, 0), UDim2.new(1, -8, 0, 25), ScrollView)
     clearBtn.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
     clearBtn.MouseButton1Click:Connect(function()
         selectedTarget = nil
-        TargetLabel.Text = "AIM KIỂU 2: Tự động (Người gần nhất)"
+        TargetLabel.Text = i18n[currentLang].TargetAuto
     end)
 
     for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer then
+        if plr ~= player then
             local pBtn = createButton(plr.DisplayName .. " (@" .. plr.Name .. ")", UDim2.new(0, 0, 0, 0), UDim2.new(1, -8, 0, 25), ScrollView)
             pBtn.MouseButton1Click:Connect(function()
                 selectedTarget = plr
-                TargetLabel.Text = "AIM Kiểu 2: " .. plr.DisplayName
+                TargetLabel.Text = i18n[currentLang].TargetSelected .. plr.DisplayName
             end)
         end
     end
     ScrollView.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
 end
 
+LangBtn.MouseButton1Click:Connect(function()
+    if currentLang == "VIE" then
+        currentLang = "ENG"
+        LangBtn.Text = "ENG"
+    else
+        currentLang = "VIE"
+        LangBtn.Text = "VIE"
+    end
+    updateUI()
+    updatePlayerList()
+end)
+
+RefreshBtn.MouseButton1Click:Connect(function()
+    updatePlayerList()
+end)
+
+RangeDec.MouseButton1Click:Connect(function()
+    aimRange = math.max(10, aimRange - 10)
+    updateUI()
+end)
+RangeInc.MouseButton1Click:Connect(function()
+    aimRange = aimRange + 10
+    updateUI()
+end)
+
+local function updateCameraFOV(newFov)
+    cameraFOV = math.clamp(newFov, 30, 120)
+    Camera.FieldOfView = cameraFOV
+    updateUI()
+end
+
+FovDec.MouseButton1Click:Connect(function() updateCameraFOV(cameraFOV - 5) end)
+FovInc.MouseButton1Click:Connect(function() updateCameraFOV(cameraFOV + 5) end)
+
+SpeedDec.MouseButton1Click:Connect(function()
+    aimSpeed = math.clamp(aimSpeed - 1, 1, 10)
+    updateUI()
+end)
+SpeedInc.MouseButton1Click:Connect(function()
+    aimSpeed = math.clamp(aimSpeed + 1, 1, 10)
+    updateUI()
+end)
+
 Players.PlayerAdded:Connect(updatePlayerList)
 Players.PlayerRemoving:Connect(updatePlayerList)
+
+updateUI()
 updatePlayerList()
 
 UserInputService.InputBegan:Connect(function(input, gpe)
